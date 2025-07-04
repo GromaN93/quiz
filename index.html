@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quiz Online</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+      padding: 20px;
+      margin: 0;
+    }
+
+    .quiz-container,
+    #start-screen {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 700px;
+      width: 100%;
+      margin: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .quiz-container:hover,
+    #start-screen:hover {
+      transform: scale(1.01);
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+      color: #343a40;
+    }
+
+    .answers label {
+      display: block;
+      margin: 10px 0;
+      background: #f1f3f5;
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 2px solid transparent;
+    }
+
+    .answers input[type="radio"]:checked + span {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .answers label:hover {
+      background: #e2e6ea;
+      border-color: #007bff;
+    }
+
+    button {
+      margin-top: 25px;
+      padding: 14px 24px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      color: white;
+      background: linear-gradient(90deg, #6a11cb, #2575fc);
+      background-size: 200% 200%;
+      animation: gradientShift 4s ease infinite;
+      box-shadow: 0 4px 15px rgba(101, 80, 255, 0.6);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(101, 80, 255, 0.9);
+      animation-play-state: paused;
+    }
+
+    /* Animacja przesuwania gradientu */
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    #timer {
+      font-size: 18px;
+      font-weight: bold;
+      color: #dc3545;
+      text-align: right;
+      margin-bottom: 15px;
+    }
+
+    #ranking {
+      margin-top: 30px;
+    }
+
+    #warning {
+      display: none;
+      color: #721c24;
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 12px;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    #category {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    ol {
+      padding-left: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .quiz-container,
+      #start-screen {
+        padding: 20px;
+      }
+
+      button {
+        padding: 12px 18px;
+        font-size: 15px;
+      }
+
+      #timer {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+    }
+    #start-screen {
+  display: block;
+}
+
+.quiz-container {
+  display: none;
+}
+
+  </style>
+</head>
+<body>
+  <div id="start-screen">
+    <h1>Witamy w Quizie Wiedzy Ogólnej!</h1>
+    <button onclick="startQuiz()">Zagraj</button>
+  </div>
+
+  <div class="quiz-container">
+    <div id="timer">Czas: <span id="time">30</span> s</div>
+    <h2 id="question">Pytanie...</h2>
+    <div id="category"></div>
+    <div class="answers">
+      <label><input type="radio" name="answer" value="a" /> <span id="a_text"></span></label>
+      <label><input type="radio" name="answer" value="b" /> <span id="b_text"></span></label>
+      <label><input type="radio" name="answer" value="c" /> <span id="c_text"></span></label>
+      <label><input type="radio" name="answer" value="d" /> <span id="d_text"></span></label>
+    </div>
+    <p id="warning">Proszę zaznaczyć odpowiedź przed przejściem dalej.</p>
+    <button onclick="submitAnswer()">Zatwierdź</button>
+    <p id="result"></p>
+    <div id="ranking"></div>
+  </div>
+
+  <script>
+    const allQuestions = [
+      ["Który pierwiastek chemiczny ma symbol He?", "Hel", "Wodór", "Rtęć", "Hafn", "a", "Chemia"],
+      ["Jakie jest największe jezioro w Polsce?", "Mamry", "Śniardwy", "Hańcza", "Wigry", "b", "Geografia"],
+      ["W którym roku Polska odzyskała niepodległość?", "1795", "1914", "1918", "1945", "c", "Historia"],
+      ["Kto jest autorem 'Pana Tadeusza'?", "Juliusz Słowacki", "Adam Mickiewicz", "Henryk Sienkiewicz", "Bolesław Prus", "b", "Literatura"],
+      ["Które z poniższych miast jest stolicą Kanady?", "Toronto", "Vancouver", "Ottawa", "Montreal", "c", "Geografia"],
+      ["Ile wynosi pierwiastek kwadratowy z 144?", "10", "11", "12", "13", "c", "Matematyka"],
+      ["Który ocean jest największy na świecie?", "Atlantycki", "Spokojny", "Indyjski", "Arktyczny", "b", "Geografia"],
+      ["Który kontynent ma najwięcej państw?", "Azja", "Europa", "Afryka", "Ameryka Południowa", "c", "Geografia"],
+      ["Jak nazywa się stolica Australii?", "Sydney", "Melbourne", "Canberra", "Perth", "c", "Geografia"],
+      ["W którym roku rozpoczęła się II wojna światowa?", "1937", "1938", "1939", "1940", "c", "Historia"]
+    ];
+
+    const quizData = allQuestions
+      .sort(() => 0.5 - Math.random())
+      .slice(0, 10)
+      .map(([question, a, b, c, d, correct, category]) => ({
+        question,
+        a,
+        b,
+        c,
+        d,
+        correct,
+        category
+      }));
+
+    let currentQuestion = 0;
+    let score = 0;
+    let time = 30;
+    let timerInterval;
+    let ranking = JSON.parse(localStorage.getItem("quizRanking") || "[]");
+
+    function startQuiz() {
+      document.getElementById("start-screen").style.display = "none";
+      document.querySelector(".quiz-container").style.display = "block";
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      deselectAnswers();
+      const q = quizData[currentQuestion];
+      document.getElementById("question").innerText = q.question;
+      document.getElementById("category").innerText = `Kategoria: ${q.category}`;
+      document.getElementById("a_text").innerText = q.a;
+      document.getElementById("b_text").innerText = q.b;
+      document.getElementById("c_text").innerText = q.c;
+      document.getElementById("d_text").innerText = q.d;
+      document.getElementById("warning").style.display = "none";
+      resetTimer();
+    }
+
+    function getSelected() {
+      const answers = document.getElementsByName("answer");
+      for (let ans of answers) {
+        if (ans.checked) return ans.value;
+      }
+      return null;
+    }
+
+    function deselectAnswers() {
+      const answers = document.getElementsByName("answer");
+      for (let ans of answers) ans.checked = false;
+    }
+
+    function submitAnswer(autoSkip = false) {
+      clearInterval(timerInterval);
+      const selected = getSelected();
+      const warning = document.getElementById("warning");
+
+      if (!selected && !autoSkip) {
+        warning.style.display = "block";
+        return;
+      }
+
+      warning.style.display = "none";
+
+      if (selected && selected === quizData[currentQuestion].correct) {
+        score++;
+      }
+
+      currentQuestion++;
+
+      if (currentQuestion < quizData.length) {
+        loadQuestion();
+      } else {
+        endQuiz();
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      time = 30;
+      document.getElementById("time").innerText = time;
+      timerInterval = setInterval(() => {
+        time--;
+        document.getElementById("time").innerText = time;
+        if (time <= 0) {
+          clearInterval(timerInterval);
+          submitAnswer(true);
+        }
+      }, 1000);
+    }
+
+    function endQuiz() {
+      const name = prompt("Podaj swoje imię do rankingu:") || "Anonim";
+      ranking.push({ name, score });
+      ranking.sort((a, b) => b.score - a.score);
+      localStorage.setItem("quizRanking", JSON.stringify(ranking.slice(0, 10)));
+
+      document.querySelector(".quiz-container").innerHTML = `
+        <h2>Twój wynik: ${score} / ${quizData.length}</h2>
+        <h3>Ranking Top 10:</h3>
+        <ol>
+          ${ranking
+            .slice(0, 10)
+            .map((r) => `<li>${r.name}: ${r.score}</li>`)
+            .join('')}
+        </ol>
+        <button onclick='location.reload()'>Zagraj ponownie</button>
+      `;
+    }
+  </script>
+</body>
+</html>
